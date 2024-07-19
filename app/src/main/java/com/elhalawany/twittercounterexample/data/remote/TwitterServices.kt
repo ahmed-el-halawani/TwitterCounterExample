@@ -1,4 +1,4 @@
-package com.elhalawany.twittercounterexample.data.remote.entities
+package com.elhalawany.twittercounterexample.data.remote
 
 import com.elhalawany.twittercounterexample.data.remote.entities.request.CreateTweetRequest
 import com.elhalawany.twittercounterexample.data.remote.entities.response.CreatePostResponse

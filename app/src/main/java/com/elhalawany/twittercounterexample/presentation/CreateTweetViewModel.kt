@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elhalawany.twittercounterexample.core.DialogResource
 import com.elhalawany.twittercounterexample.core.Resource
-import com.elhalawany.twittercounterexample.data.remote.entities.ServicesProvider
+import com.elhalawany.twittercounterexample.data.remote.ServicesProvider
 import com.elhalawany.twittercounterexample.data.repository.TwitterRepositoryImpl
 import com.elhalawany.twittercounterexample.domain.exceptions.ExceptionHandler
 import com.elhalawany.twittercounterexample.domain.usecases.CreateTweetUseCase

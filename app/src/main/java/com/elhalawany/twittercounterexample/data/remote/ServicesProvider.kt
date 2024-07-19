@@ -1,4 +1,4 @@
-package com.elhalawany.twittercounterexample.data.remote.entities
+package com.elhalawany.twittercounterexample.data.remote
 
 import com.elhalawany.twittercounterexample.BuildConfig
 import com.elhalawany.twittercounterexample.core.OAuthHeaderGenerator

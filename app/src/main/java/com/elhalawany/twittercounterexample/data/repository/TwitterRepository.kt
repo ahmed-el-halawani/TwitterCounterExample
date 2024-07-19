@@ -1,6 +1,6 @@
 package com.elhalawany.twittercounterexample.data.repository
 
-import com.elhalawany.twittercounterexample.data.remote.entities.TwitterServices
+import com.elhalawany.twittercounterexample.data.remote.TwitterServices
 import com.elhalawany.twittercounterexample.data.remote.entities.request.CreateTweetRequest
 import com.elhalawany.twittercounterexample.data.remote.entities.response.ErrorResponse
 import com.elhalawany.twittercounterexample.domain.exceptions.ConnectivityException
