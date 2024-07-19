@@ -1,6 +1,6 @@
 # TwitterCounter Assigment
 
-## Notes
+### Notes
   1- Key Properties File: The key.properties file was not added to .gitignore to facilitate testing of the application.  
 
   2- Twitter Text Library: I utilized the Twitter Text library, which is provided by Twitter.  
