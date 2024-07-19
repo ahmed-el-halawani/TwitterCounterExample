@@ -1,0 +1,8 @@
+<resources>
+    <declare-styleable name="TwitterCounterComponent">
+
+        <attr name="hint" format="string" />
+        <attr name="maxCharacterCount" format="integer" />
+
+    </declare-styleable>
+</resources>

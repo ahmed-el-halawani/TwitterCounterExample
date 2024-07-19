@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Twitter Counter example</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="clear_text">Clear Text</string>
+    <string name="copy_text">Copy Text</string>
+    <string name="post_tweet">Post tweet</string>
+    <string name="success">Success</string>
+    <string name="done">Done</string>
+    <string name="error">Error</string>
+    <string name="ok">Ok</string>
+
+    <string name="unknown_exception">Unknown exception</string>
+    <string name="unknown_server_exception">Unknown Server Exception</string>
+    <string name="internet_exception">Please check your internet connection and try again later</string>
+    <string name="duplicate_tweet_content">You are not allowed to create a Tweet with duplicate content.</string>
+
+</resources>
