@@ -66,32 +66,28 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ---------------------------------------------------------
-      # 3. UPLOAD TO APPETIZE
-      # ---------------------------------------------------------
+      # 5. UPLOAD TO APPETIZE
       - name: Upload to Appetize.io
         id: upload_appetize
         env:
           APPETIZE_TOKEN: ${{ secrets.APPETIZE_TOKEN }}
         run: |
-          # Find the DEBUG APK (Automatically signed by Android SDK)
-          APK_PATH=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          # Use the renamed APK from the previous step
+          APK_NAME="app-v1.0.${{ github.run_number }}.apk"
           
-          if [ -z "$APK_PATH" ]; then
-            echo "Error: APK not found! Build likely failed."
+          if [ ! -f "$APK_NAME" ]; then
+            echo "Error: APK file '$APK_NAME' not found!"
             exit 1
           fi
 
-          echo "Found APK at: $APK_PATH"
-          echo "Uploading to Appetize..."
+          echo "Uploading $APK_NAME to Appetize..."
           
-          # UPLOAD FIX: Use --user to handle the API Token correctly
+          # Upload using --user for correct authentication
           RESPONSE=$(curl --location --request POST 'https://api.appetize.io/v1/apps' \
             --user "$APPETIZE_TOKEN:" \
-            --form "file=@$APK_PATH" \
+            --form "file=@$APK_NAME" \
             --form "platform=android")
           
-          # Extract Public Key
           PUBLIC_KEY=$(echo $RESPONSE | jq -r '.publicKey')
           
           if [ "$PUBLIC_KEY" == "null" ] || [ -z "$PUBLIC_KEY" ]; then
