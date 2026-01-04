@@ -2,12 +2,10 @@
 
 A native Android application that implements Twitter's specific character counting logic. This project demonstrates the usage of the official **Twitter Text Library** to accurately parse and weigh characters according to Twitter's publishing rules.
 
-<p>
-  <a href="https://appetize.io/embed/d2za2oi4ukmy5ro3boqkcc4iq4?autoplay=true">
-    <img src="https://github.com/user-attachments/assets/dcfe3c5d-ff3b-4b53-94d6-3621aa084fab" width="250" alt="Click to run app" title="Click to run app directly in browser">
-  </a>
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/dcfe3c5d-ff3b-4b53-94d6-3621aa084fab" width="250" alt="App Preview">
   <br>
-  <em>Click the phone to run the app in your browser</em>
+  <em>(Badge above will appear after first successful build)</em>
 </p>
 
 ## 🚀 Features
@@ -29,7 +27,7 @@ A native Android application that implements Twitter's specific character counti
 ## 📝 Assignment Notes
 
 ### 1. Key Properties
-The `key.properties` file was **intentionally** not added to `.gitignore`. This was done to facilitate immediate testing and building of the application without requiring additional configuration steps.
+The `key.properties` file was **intentionally** not added to `.gitignore`. This was done to facilitate immediate testing and building of the application without requiring additional configuration steps from the reviewer.
 
 ### 2. Twitter Text Library
 I utilized the official **Twitter Text Library** provided by Twitter. 
