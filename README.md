@@ -5,7 +5,9 @@ A native Android application that implements Twitter's specific character counti
 <p align="center">
   <img src="https://github.com/user-attachments/assets/dcfe3c5d-ff3b-4b53-94d6-3621aa084fab" width="250" alt="App Preview">
   <br>
-  <em>(Badge above will appear after first successful build)</em>
+  <!-- LIVE_PREVIEW_START -->
+<em>(Badge will appear after first successful build)</em>
+<!-- LIVE_PREVIEW_END -->
 </p>
 
 ## 🚀 Features
