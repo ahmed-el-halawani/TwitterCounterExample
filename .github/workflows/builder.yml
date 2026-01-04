@@ -1,0 +1,92 @@
+name: Android Release & Live Preview
+
+on:
+  push:
+    branches: [ "main", "master" ] # Triggers on main or master
+
+jobs:
+  build-and-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for Releases and pushing README updates
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # AUTOMATIC VERSION BUMP (Works for build.gradle.kts)
+      - name: Bump Version Code
+        run: |
+          # Replaces 'versionCode = 1' with 'versionCode = 123' (run number)
+          sed -i 's/versionCode\s*=\s*[0-9]*/versionCode = ${{ github.run_number }}/' app/build.gradle.kts || echo "Kotlin script not found, trying Groovy..."
+          sed -i 's/versionCode\s[0-9]*/versionCode ${{ github.run_number }}/' app/build.gradle || true
+          echo "Updated versionCode to ${{ github.run_number }}"
+
+      - name: Build APK (Release)
+        run: ./gradlew assembleRelease --stacktrace
+
+      # UPLOAD TO APPETIZE
+      - name: Upload to Appetize.io
+        id: upload_appetize
+        env:
+          APPETIZE_TOKEN: ${{ secrets.APPETIZE_TOKEN }}
+        run: |
+          # Find the APK automatically (avoids hardcoded paths)
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          
+          if [ -z "$APK_PATH" ]; then
+            echo "Error: APK not found!"
+            exit 1
+          fi
+
+          echo "Found APK at: $APK_PATH"
+          
+          # Upload
+          RESPONSE=$(curl --location --request POST 'https://api.appetize.io/v1/apps' \
+            --header "Authorization: Basic $APPETIZE_TOKEN" \
+            --form "file=@$APK_PATH" \
+            --form "platform=android")
+          
+          # Extract Public Key
+          PUBLIC_KEY=$(echo $RESPONSE | jq -r '.publicKey')
+          
+          if [ "$PUBLIC_KEY" == "null" ] || [ -z "$PUBLIC_KEY" ]; then
+            echo "Upload failed. Response: $RESPONSE"
+            exit 1
+          fi
+          
+          echo "public_key=$PUBLIC_KEY" >> $GITHUB_OUTPUT
+
+      # UPDATE README
+      - name: Update Live Preview Link
+        env:
+          PUBLIC_KEY: ${{ steps.upload_appetize.outputs.public_key }}
+        run: |
+          # New Link with your custom frame settings
+          NEW_LINK="[![Run Live Preview](https://img.shields.io/badge/▶-Run%20Live%20Preview-000?style=for-the-badge&logo=android)](https://appetize.io/embed/$PUBLIC_KEY?autoplay=true&device=pixel4&scale=75&orientation=portrait&osVersion=11.0)"
+          
+          # Replace text between markers
+          sed -i '//,//c\\n'"$NEW_LINK"'\n' README.md
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if git diff --quiet README.md; then
+            echo "No changes to README."
+          else
+            git add README.md
+            git commit -m "docs: update live preview link [skip ci]"
+            git push
+          fi
