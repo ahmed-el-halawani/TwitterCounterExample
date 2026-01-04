@@ -2,16 +2,17 @@ name: Android Release & Live Preview
 
 on:
   push:
-    branches: [ "main", "master" ] # Triggers on main or master
+    branches: [ "main", "master" ]
 
 jobs:
   build-and-preview:
     runs-on: ubuntu-latest
-
+    
+    # ⚠️ ACCESS PRODUCTION SECRETS
     environment: production
     
     permissions:
-      contents: write # Needed for Releases and pushing README updates
+      contents: write # Required to push README updates
 
     steps:
       - name: Checkout code
@@ -27,37 +28,49 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # AUTOMATIC VERSION BUMP (Works for build.gradle.kts)
+      # ---------------------------------------------------------
+      # 1. VERSIONING
+      # ---------------------------------------------------------
       - name: Bump Version Code
         run: |
-          # Replaces 'versionCode = 1' with 'versionCode = 123' (run number)
-          sed -i 's/versionCode\s*=\s*[0-9]*/versionCode = ${{ github.run_number }}/' app/build.gradle.kts || echo "Kotlin script not found, trying Groovy..."
-          sed -i 's/versionCode\s[0-9]*/versionCode ${{ github.run_number }}/' app/build.gradle || true
+          # Try updating build.gradle.kts (Kotlin DSL)
+          if [ -f "app/build.gradle.kts" ]; then
+             sed -i 's/versionCode\s*=\s*[0-9]*/versionCode = ${{ github.run_number }}/' app/build.gradle.kts || true
+          fi
+          
+          # Try updating build.gradle (Groovy DSL)
+          if [ -f "app/build.gradle" ]; then
+             sed -i 's/versionCode\s[0-9]*/versionCode ${{ github.run_number }}/' app/build.gradle || true
+          fi
+          
           echo "Updated versionCode to ${{ github.run_number }}"
 
-      - name: Build APK (Release)
-        run: ./gradlew assembleRelease --stacktrace
+      # ---------------------------------------------------------
+      # 2. BUILD (Use Debug to ensure it is signed)
+      # ---------------------------------------------------------
+      - name: Build APK (Debug)
+        run: ./gradlew assembleDebug --stacktrace
 
-      # Upload to Appetize.io
+      # ---------------------------------------------------------
+      # 3. UPLOAD TO APPETIZE
+      # ---------------------------------------------------------
       - name: Upload to Appetize.io
         id: upload_appetize
         env:
           APPETIZE_TOKEN: ${{ secrets.APPETIZE_TOKEN }}
         run: |
-          # Find the APK
-          # NOTE: I switched this back to 'debug' to ensure it is signed (see note below)
+          # Find the DEBUG APK (Automatically signed by Android SDK)
           APK_PATH=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
           
           if [ -z "$APK_PATH" ]; then
-            echo "Error: APK not found!"
+            echo "Error: APK not found! Build likely failed."
             exit 1
           fi
 
           echo "Found APK at: $APK_PATH"
           echo "Uploading to Appetize..."
           
-          # FIX IS HERE: Use --user instead of --header
-          # The colon (:) at the end is important!
+          # UPLOAD FIX: Use --user to handle the API Token correctly
           RESPONSE=$(curl --location --request POST 'https://api.appetize.io/v1/apps' \
             --user "$APPETIZE_TOKEN:" \
             --form "file=@$APK_PATH" \
@@ -74,15 +87,17 @@ jobs:
           echo "Success! Public Key: $PUBLIC_KEY"
           echo "public_key=$PUBLIC_KEY" >> $GITHUB_OUTPUT
 
-      # UPDATE README
+      # ---------------------------------------------------------
+      # 4. UPDATE README
+      # ---------------------------------------------------------
       - name: Update Live Preview Link
         env:
           PUBLIC_KEY: ${{ steps.upload_appetize.outputs.public_key }}
         run: |
-          # New Link with your custom frame settings
+          # Generate new link
           NEW_LINK="[![Run Live Preview](https://img.shields.io/badge/▶-Run%20Live%20Preview-000?style=for-the-badge&logo=android)](https://appetize.io/embed/$PUBLIC_KEY?autoplay=true&device=pixel4&scale=75&orientation=portrait&osVersion=11.0)"
           
-          # Replace text between markers
+          # Inject into README between the markers
           sed -i '//,//c\\n'"$NEW_LINK"'\n' README.md
 
       - name: Commit and Push
@@ -91,7 +106,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
           if git diff --quiet README.md; then
-            echo "No changes to README."
+            echo "No changes to README. Skipping commit."
           else
             git add README.md
             git commit -m "docs: update live preview link [skip ci]"
