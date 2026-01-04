@@ -5,14 +5,14 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  build-and-preview:
+  build-and-release:
     runs-on: ubuntu-latest
     
-    # ⚠️ ACCESS PRODUCTION SECRETS
+    # ⚠️ Access Production Secrets
     environment: production
     
     permissions:
-      contents: write # Required to push README updates
+      contents: write # Required for Releases AND Pushing README
 
     steps:
       - name: Checkout code
@@ -28,28 +28,43 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # ---------------------------------------------------------
       # 1. VERSIONING
-      # ---------------------------------------------------------
       - name: Bump Version Code
         run: |
-          # Try updating build.gradle.kts (Kotlin DSL)
           if [ -f "app/build.gradle.kts" ]; then
              sed -i 's/versionCode\s*=\s*[0-9]*/versionCode = ${{ github.run_number }}/' app/build.gradle.kts || true
           fi
-          
-          # Try updating build.gradle (Groovy DSL)
           if [ -f "app/build.gradle" ]; then
              sed -i 's/versionCode\s[0-9]*/versionCode ${{ github.run_number }}/' app/build.gradle || true
           fi
-          
           echo "Updated versionCode to ${{ github.run_number }}"
 
-      # ---------------------------------------------------------
-      # 2. BUILD (Use Debug to ensure it is signed)
-      # ---------------------------------------------------------
-      - name: Build APK (Debug)
+      # 2. BUILD (Debug)
+      - name: Build APK
         run: ./gradlew assembleDebug --stacktrace
+
+      # 3. RENAME APK
+      - name: Rename APK
+        run: |
+          # Move the default output to a custom named file in the root
+          mv app/build/outputs/apk/debug/app-debug.apk app-v1.0.${{ github.run_number }}.apk
+          echo "APK moved to: app-v1.0.${{ github.run_number }}.apk"
+
+      # 4. CREATE GITHUB RELEASE
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          body: |
+            Automatic build #${{ github.run_number }}
+            - Version Code: ${{ github.run_number }}
+            - Branch: ${{ github.ref_name }}
+          files: app-v1.0.${{ github.run_number }}.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ---------------------------------------------------------
       # 3. UPLOAD TO APPETIZE
@@ -94,7 +109,7 @@ jobs:
         env:
           PUBLIC_KEY: ${{ steps.upload_appetize.outputs.public_key }}
         run: |
-          NEW_LINK="<a href=\"https://appetize.io/embed/$PUBLIC_KEY?autoplay=true&device=pixel4&scale=75&orientation=portrait&osVersion=11.0\"><img alt=\"Run Live Preview\" src=\"https://img.shields.io/badge/%E2%96%B6-Run%20Live%20Preview-000?style=for-the-badge&logo=android\" /></a>"
+          NEW_LINK="<a href=\"https://appetize.io/embed/$PUBLIC_KEY?autoplay=true&device=pixel4&scale=75&orientation=portrait&osVersion=11.0\"><img src="https://github.com/user-attachments/assets/dcfe3c5d-ff3b-4b53-94d6-3621aa084fab" width="250" alt="App Preview"> <br><img alt=\"Run Live Preview\" src=\"https://img.shields.io/badge/%E2%96%B6-Run%20Live%20Preview-000?style=for-the-badge&logo=android\" /></a>"
       
           sed -i "/<!-- LIVE_PREVIEW_START -->/,/<!-- LIVE_PREVIEW_END -->/c\\
           <!-- LIVE_PREVIEW_START -->\\
