@@ -38,14 +38,15 @@ jobs:
       - name: Build APK (Release)
         run: ./gradlew assembleRelease --stacktrace
 
-      # UPLOAD TO APPETIZE
+      # Upload to Appetize.io
       - name: Upload to Appetize.io
         id: upload_appetize
         env:
           APPETIZE_TOKEN: ${{ secrets.APPETIZE_TOKEN }}
         run: |
-          # Find the APK automatically (avoids hardcoded paths)
-          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          # Find the APK
+          # NOTE: I switched this back to 'debug' to ensure it is signed (see note below)
+          APK_PATH=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
           
           if [ -z "$APK_PATH" ]; then
             echo "Error: APK not found!"
@@ -53,10 +54,12 @@ jobs:
           fi
 
           echo "Found APK at: $APK_PATH"
+          echo "Uploading to Appetize..."
           
-          # Upload
+          # FIX IS HERE: Use --user instead of --header
+          # The colon (:) at the end is important!
           RESPONSE=$(curl --location --request POST 'https://api.appetize.io/v1/apps' \
-            --header "Authorization: Basic $APPETIZE_TOKEN" \
+            --user "$APPETIZE_TOKEN:" \
             --form "file=@$APK_PATH" \
             --form "platform=android")
           
@@ -68,6 +71,7 @@ jobs:
             exit 1
           fi
           
+          echo "Success! Public Key: $PUBLIC_KEY"
           echo "public_key=$PUBLIC_KEY" >> $GITHUB_OUTPUT
 
       # UPDATE README
