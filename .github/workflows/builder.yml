@@ -94,10 +94,10 @@ jobs:
         env:
           PUBLIC_KEY: ${{ steps.upload_appetize.outputs.public_key }}
         run: |
-          # Generate new link
+          # Define the new link
           NEW_LINK="[![Run Live Preview](https://img.shields.io/badge/▶-Run%20Live%20Preview-000?style=for-the-badge&logo=android)](https://appetize.io/embed/$PUBLIC_KEY?autoplay=true&device=pixel4&scale=75&orientation=portrait&osVersion=11.0)"
           
-          # Inject into README between the markers
+          # FIX IS HERE: We explicitly tell sed to look for the START and END comments
           sed -i '//,//c\\n'"$NEW_LINK"'\n' README.md
 
       - name: Commit and Push
